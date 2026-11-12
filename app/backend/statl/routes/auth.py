@@ -34,7 +34,7 @@ def login():
     if error:
         return error, http_code
     return jsonify({"access_token": token})
-    
+
 
 
 
@@ -81,9 +81,12 @@ def resend_verification():
     '''
     data = request.get_json() or {}
     email = data.get("email", "")
-    if email:
-        resend_verification_service(email)
-    return jsonify({"message": "Se o email existir e não estiver verificado, um novo link será enviado"}), 200
+    try:
+        if email:
+            resend_verification_service(email)
+    except Exception:
+        return jsonify({"error": "Não foi possível enviar o código. Tente novamente mais tarde."}), 503
+    return jsonify({"message": "Se o email existir e não estiver verificado, um novo código será enviado"}), 200
 
 
 @bp.route("/verify-code", methods=["POST"])

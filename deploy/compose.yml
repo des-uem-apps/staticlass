@@ -1,0 +1,35 @@
+services:
+  db:
+    image: postgres:17-alpine
+    restart: unless-stopped
+    environment:
+      POSTGRES_DB: staticlass
+      POSTGRES_USER: staticlass
+      POSTGRES_PASSWORD: ${DB_PASSWORD}
+    volumes:
+      - db_data:/var/lib/postgresql/data
+    healthcheck:
+      test: [CMD-SHELL, pg_isready -U staticlass -d staticlass]
+      interval: 5s
+      retries: 20
+  backend:
+    build: ../app/backend
+    restart: unless-stopped
+    env_file:
+      - .env
+    environment:
+      DATABASE_URL: postgresql://staticlass:${DB_PASSWORD}@db:5432/staticlass
+      SECRET_KEY: ${SECRET_KEY}
+      APP_BASE_URL: https://des-uem.tailbef376.ts.net/alt-home/aplicativos/staticlass/app
+      CORS_ORIGINS: https://des-uem.tailbef376.ts.net
+      CLASSROOM_STORAGE_PATH: /private-classroom
+    ports:
+      - "127.0.0.1:5000:5000"
+    volumes:
+      - ../uploads:/uploads
+      - ../classroom-private:/private-classroom:ro
+    depends_on:
+      db:
+        condition: service_healthy
+volumes:
+  db_data:

@@ -1,3 +1,4 @@
+import QuestionText from '../components/QuestionText.jsx';
 import { useState, useEffect } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
 import { ArrowLeft, Clock, Check, X, FilePen } from 'lucide-react';
@@ -106,9 +107,7 @@ export default function TelaQuestao() {
               )}
             </div>
 
-            <p style={{ fontSize: 17, lineHeight: 1.6, margin: '0 0 24px', maxWidth: '65ch' }}>
-              {question.issue}
-            </p>
+            <QuestionText text={question.issue} style={{ fontSize: 17, lineHeight: 1.6, margin: '0 0 24px', maxWidth: '65ch' }} />
 
             <div className="alt-list" role="radiogroup" aria-label="Alternativas">
               {alternatives.map(({ letter, text }) => (
@@ -122,7 +121,7 @@ export default function TelaQuestao() {
                   onKeyDown={(e) => e.key === 'Enter' && !submitted && setSelected(letter)}
                 >
                   <div className="alt__letter">{letter}</div>
-                  <div className="alt__text">{text}</div>
+                  <QuestionText className="alt__text" text={text} />
                   {submitted && letter === correct && (
                     <Check size={20} style={{ color: 'var(--success-600)', flexShrink: 0 }} />
                   )}
@@ -188,9 +187,7 @@ export default function TelaQuestao() {
               <div className="card__header">
                 <h2 className="card__title">Resolução</h2>
               </div>
-              <p style={{ fontSize: 14, lineHeight: 1.6, color: 'var(--text-muted)' }}>
-                {question.solution}
-              </p>
+              <QuestionText text={question.solution} style={{ fontSize: 14, lineHeight: 1.6, color: 'var(--text-muted)' }} />
             </div>
           )}
         </aside>

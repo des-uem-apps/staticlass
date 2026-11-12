@@ -1,3 +1,4 @@
+import ClassroomListsPanel from '../../components/ClassroomListsPanel.jsx';
 import { useState, useEffect } from 'react';
 import { Clock, CheckCircle, Circle } from 'lucide-react';
 import Topbar from '../../components/Topbar.jsx';
@@ -21,6 +22,7 @@ export default function MinhasListasPage() {
     <>
       <Topbar crumbs={CRUMBS} />
       <div className="content">
+        <ClassroomListsPanel />
         <div className="page-header">
           <div>
             <h1 className="page-header__title">Minhas listas</h1>

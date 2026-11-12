@@ -1,10 +1,11 @@
 import { render, screen, waitFor } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { MemoryRouter, Route, Routes } from 'react-router-dom';
-import { describe, it, expect, beforeEach } from 'vitest';
+import { describe, it, expect, beforeEach, vi } from 'vitest';
 import { AuthProvider } from '../context/AuthContext.jsx';
 import Register from '../pages/Register.jsx';
 import Login from '../pages/Login.jsx';
+import api from '../services/api.js';
 
 function setup(initialPath = '/register') {
   return render(
@@ -28,7 +29,7 @@ describe('Register page', () => {
     expect(screen.getByLabelText(/email/i)).toBeInTheDocument();
     expect(screen.getByLabelText(/^senha$/i)).toBeInTheDocument();
     expect(screen.getByLabelText(/confirmar senha/i)).toBeInTheDocument();
-    expect(screen.getByRole('checkbox')).toBeInTheDocument();
+    expect(screen.getByRole('checkbox', { name: /sou aluno da uem/i })).toBeInTheDocument();
     expect(screen.getByRole('button', { name: /cadastrar/i })).toBeInTheDocument();
   });
 
@@ -36,7 +37,7 @@ describe('Register page', () => {
     const user = userEvent.setup();
     setup();
     expect(screen.queryByLabelText(/número do ra/i)).not.toBeInTheDocument();
-    await user.click(screen.getByRole('checkbox'));
+    await user.click(screen.getByRole('checkbox', { name: /sou aluno da uem/i }));
     expect(screen.getByLabelText(/número do ra/i)).toBeInTheDocument();
   });
 
@@ -93,5 +94,36 @@ describe('Register page', () => {
   it('"Criar conta" link is visible on Login page', () => {
     setup('/login');
     expect(screen.getByRole('link', { name: /criar conta/i })).toBeInTheDocument();
+  });
+});
+
+
+describe('UEM student registration', () => {
+  it.each([
+    ['Graduação', 'graduacao'],
+    ['Mestrado', 'mestrado'],
+  ])('submits numeric RA and the selected %s level', async (label, level) => {
+    const user = userEvent.setup();
+    const post = vi.spyOn(api, 'post').mockResolvedValue({ data: {} });
+    try {
+      setup();
+      await user.type(screen.getByLabelText(/nome/i), 'Estudante UEM');
+      await user.type(screen.getByLabelText(/email/i), 'estudante@example.com');
+      await user.type(screen.getByLabelText(/^senha$/i), 'teste123');
+      await user.type(screen.getByLabelText(/confirmar senha/i), 'teste123');
+      await user.click(screen.getByRole('checkbox', { name: /sou aluno da uem/i }));
+      await user.click(screen.getByRole('checkbox', { name: label, exact: true }));
+      expect(screen.getByRole('checkbox', { name: label, exact: true })).toBeChecked();
+      const other = label === 'Mestrado' ? 'Graduação' : 'Mestrado';
+      expect(screen.getByRole('checkbox', { name: other, exact: true })).not.toBeChecked();
+      await user.type(screen.getByLabelText(/número do ra/i), 'RA00a123-4');
+      expect(screen.getByLabelText(/número do ra/i)).toHaveValue('001234');
+      await user.click(screen.getByRole('button', { name: /cadastrar/i }));
+      await waitFor(() => expect(post).toHaveBeenCalledWith('/auth/register', expect.objectContaining({
+        is_uem: true, ra: '001234', nivel_curso: level,
+      })));
+    } finally {
+      post.mockRestore();
+    }
   });
 });

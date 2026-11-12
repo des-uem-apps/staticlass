@@ -43,7 +43,7 @@ def criar_usuario(email, senha_hash, nome, ra=None, ano_ingresso=None):
 
 def buscar_usuario_por_ra(ra):
     result = db.session.execute(
-        text("SELECT * FROM users WHERE ra = :ra"),
+        text("SELECT * FROM users WHERE LOWER(ra) = LOWER(:ra)"),
         {"ra": ra},
     )
     row = result.fetchone()

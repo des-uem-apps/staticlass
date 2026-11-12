@@ -1,3 +1,4 @@
+import ClassroomListsPanel from '../../components/ClassroomListsPanel.jsx';
 import { useState, useEffect } from 'react';
 import { Plus, ChevronRight } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
@@ -30,6 +31,7 @@ export default function ListasPage() {
     <>
       <Topbar crumbs={CRUMBS} />
       <div className="content">
+        <ClassroomListsPanel />
         <div className="page-header">
           <div>
             <h1 className="page-header__title">Minhas listas</h1>

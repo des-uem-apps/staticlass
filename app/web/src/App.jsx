@@ -89,6 +89,12 @@ export default function App() {
 
   return (
     <AuthProvider>
+      {import.meta.env.BASE_URL.startsWith('/alt-home/') && (
+        <nav className="des-quick-links" aria-label="Links do DES">
+          <a className="des-back-link" href="https://des-uem.tailbef376.ts.net/alt-home/graduacao/guia" target="_blank" rel="noopener noreferrer">Guia da Graduação ↗</a>
+          <a className="des-back-link" href="/alt-home/aplicativos">← Voltar a Aplicativos</a>
+        </nav>
+      )}
       <Routes>
         <Route path="/login" element={<Login />} />
         <Route path="/register" element={<Register />} />

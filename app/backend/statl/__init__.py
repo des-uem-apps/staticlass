@@ -115,8 +115,8 @@ def _configurar_cors(app):
 
 
 def _registrar_blueprints(app):
-    from .routes import admin, auth, gamification, lists, questions, users, turmas
-    for blueprint in (auth.bp, questions.bp, users.bp, admin.bp, gamification.bp, lists.bp, turmas.bp):
+    from .routes import admin, auth, gamification, lists, questions, users, turmas, classroom
+    for blueprint in (auth.bp, questions.bp, users.bp, admin.bp, gamification.bp, lists.bp, turmas.bp, classroom.bp):
         app.register_blueprint(blueprint)
 
 

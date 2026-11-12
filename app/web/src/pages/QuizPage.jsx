@@ -1,3 +1,4 @@
+import QuestionText from '../components/QuestionText.jsx';
 import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { ArrowLeft, Check, X, RotateCcw } from 'lucide-react';
@@ -200,9 +201,7 @@ function QuizPhase({ questions, onFinish, onAbort }) {
           </div>
 
           {/* Question text */}
-          <p style={{ fontSize: 17, lineHeight: 1.7, margin: '0 0 28px', whiteSpace: 'pre-wrap' }}>
-            {current.issue}
-          </p>
+          <QuestionText text={current.issue} style={{ fontSize: 17, lineHeight: 1.7, margin: '0 0 28px' }} />
 
           {/* Alternatives */}
           {qt === 'open_answer' && (
@@ -254,7 +253,7 @@ function QuizPhase({ questions, onFinish, onAbort }) {
                   onKeyDown={(e) => e.key === 'Enter' && setSelected(letter)}
                 >
                   <div className="alt__letter">{letter}</div>
-                  <div className="alt__text">{text}</div>
+                  <QuestionText className="alt__text" text={text} />
                 </div>
               ))}
             </div>
@@ -352,7 +351,7 @@ function ResultPhase({ responses, onRestart, onNew }) {
                   <p style={{ margin: '0 0 4px', fontWeight: 700, fontSize: 13, color: 'var(--text-muted)' }}>
                     Questão {idx + 1} · #{res.id}
                   </p>
-                  <p style={{ margin: 0, fontSize: 15, lineHeight: 1.6, whiteSpace: 'pre-wrap' }}>{res.issue}</p>
+                  <QuestionText text={res.issue} style={{ margin: 0, fontSize: 15, lineHeight: 1.6 }} />
                 </div>
               </div>
 
@@ -390,7 +389,7 @@ function ResultPhase({ responses, onRestart, onNew }) {
                   {res.alternatives?.map(({ letter, text }) => (
                     <div key={letter} className={altResultClass(letter, res.userAnswer, res.correct_answer, true)}>
                       <div className="alt__letter">{letter}</div>
-                      <div className="alt__text">{text}</div>
+                      <QuestionText className="alt__text" text={text} />
                       {letter === res.correct_answer && <Check size={18} style={{ color: 'var(--success-600)', flexShrink: 0 }} />}
                       {letter === res.userAnswer && letter !== res.correct_answer && <X size={18} style={{ color: 'var(--danger-600)', flexShrink: 0 }} />}
                     </div>
@@ -401,7 +400,7 @@ function ResultPhase({ responses, onRestart, onNew }) {
               {res.solution && (
                 <div style={{ marginTop: 14, padding: '12px 16px', background: 'var(--brand-50)', borderRadius: 'var(--radius-md)', borderLeft: '3px solid var(--brand-400)' }}>
                   <p style={{ margin: 0, fontSize: 13, fontWeight: 700, color: 'var(--brand-600)', marginBottom: 4 }}>Resolução</p>
-                  <p style={{ margin: 0, fontSize: 14, lineHeight: 1.6, color: 'var(--text-muted)', whiteSpace: 'pre-wrap' }}>{res.solution}</p>
+                  <QuestionText text={res.solution} style={{ margin: 0, fontSize: 14, lineHeight: 1.6, color: 'var(--text-muted)' }} />
                 </div>
               )}
             </div>

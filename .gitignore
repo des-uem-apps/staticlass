@@ -2,3 +2,6 @@ banco_questoes/
 .env
 app/backend/.env
 .vercel
+
+# Private Classroom archive (served only through authorized list access)
+classroom-private/

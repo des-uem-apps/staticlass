@@ -14,6 +14,7 @@ export default function Register() {
   const [confirmPassword, setConfirmPassword] = useState('');
   const [isUem, setIsUem] = useState(false);
   const [ra, setRa] = useState('');
+  const [nivelCurso, setNivelCurso] = useState('graduacao');
   const [error, setError] = useState('');
   const [loading, setLoading] = useState(false);
 
@@ -21,6 +22,8 @@ export default function Register() {
   const [otpCode, setOtpCode] = useState('');
   const [otpError, setOtpError] = useState('');
   const [otpLoading, setOtpLoading] = useState(false);
+  const [deliveryMessage, setDeliveryMessage] = useState('');
+  const [resending, setResending] = useState(false);
 
   async function handleRegister(e) {
     e.preventDefault();
@@ -38,9 +41,16 @@ export default function Register() {
         confirm_password: confirmPassword,
         is_uem: isUem,
         ra: isUem ? ra : undefined,
+        nivel_curso: isUem ? nivelCurso : undefined,
       });
+      setDeliveryMessage('Código enviado. Confira sua caixa de entrada e o spam.');
       setStep('verify');
     } catch (err) {
+      if (err.response?.data?.verification_pending) {
+        setStep('verify');
+        setOtpError(err.response.data.error);
+        return;
+      }
       setError(err.response?.data?.error || 'Erro ao cadastrar. Tente novamente.');
     } finally {
       setLoading(false);
@@ -63,10 +73,16 @@ export default function Register() {
   }
 
   async function handleResend() {
+    setOtpError('');
+    setDeliveryMessage('');
+    setResending(true);
     try {
-      await api.post('/auth/resend-verification', { email });
-    } catch {
-      // silent
+      const response = await api.post('/auth/resend-verification', { email });
+      setDeliveryMessage(response.data.message);
+    } catch (err) {
+      setOtpError(err.response?.data?.error || 'Não foi possível reenviar o código. Tente novamente.');
+    } finally {
+      setResending(false);
     }
   }
 
@@ -101,8 +117,9 @@ export default function Register() {
         <div className="login-card">
           <h2 style={{ fontFamily: 'var(--font-display)', marginTop: 0, marginBottom: 8 }}>Verifique seu email</h2>
           <p style={{ color: 'var(--text-muted)', marginTop: 0, marginBottom: 20, fontSize: 14 }}>
-            Enviamos um código de 6 dígitos para <strong>{email}</strong>.
+            Confirme <strong>{email}</strong> com o código de 6 dígitos.
           </p>
+          {deliveryMessage && <p role="status">{deliveryMessage}</p>}
           <form onSubmit={handleVerifyOtp} style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
             <input
               className="input"
@@ -125,9 +142,10 @@ export default function Register() {
             <button
               type="button"
               onClick={handleResend}
+              disabled={resending}
               style={{ background: 'none', border: 'none', color: 'var(--accent)', cursor: 'pointer', fontSize: 14 }}
             >
-              Reenviar código
+              {resending ? 'Reenviando…' : 'Reenviar código'}
             </button>
             <Link to="/login" style={{ color: 'var(--text-muted)', fontSize: 13 }}>
               Verificar mais tarde
@@ -182,16 +200,34 @@ export default function Register() {
 
           {isUem && (
             <div className="field" style={{ marginBottom: 0 }}>
+              <fieldset style={{ border: 0, padding: 0, margin: '0 0 12px' }}>
+                <legend className="field__label">Vínculo com a UEM</legend>
+                <div style={{ display: 'flex', gap: 20 }}>
+                  <label style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+                    <input type="checkbox" checked={nivelCurso === 'graduacao'} onChange={() => setNivelCurso('graduacao')} />
+                    Graduação
+                  </label>
+                  <label style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+                    <input type="checkbox" checked={nivelCurso === 'mestrado'} onChange={() => setNivelCurso('mestrado')} />
+                    Mestrado
+                  </label>
+                </div>
+              </fieldset>
               <label className="field__label" htmlFor="ra">Número do RA</label>
               <input
                 className="input login-input"
                 id="ra"
                 type="text"
                 value={ra}
-                onChange={(e) => setRa(e.target.value.toUpperCase())}
-                placeholder="Ex: RA135899"
+                onChange={(e) => setRa(e.target.value.replace(/[^0-9]/g, ''))}
+                inputMode="numeric"
+                pattern="[0-9]+"
+                maxLength={28}
+                placeholder="Ex: 135899"
+                aria-describedby="ra-hint"
                 required={isUem}
               />
+              <small id="ra-hint">Digite apenas os números, sem RA ou PG.</small>
             </div>
           )}
 

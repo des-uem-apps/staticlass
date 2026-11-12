@@ -67,7 +67,12 @@ def register_user(data):
         return None, jsonify({"error": "RA é obrigatório para alunos da UEM."}), 400
 
     if ra:
-        ra = ra.strip().upper()
+        nivel_curso = data.get("nivel_curso", "graduacao")
+        if nivel_curso not in ("graduacao", "mestrado"):
+            return None, jsonify({"error": "Selecione Graduação ou Mestrado."}), 400
+        if not isinstance(ra, str) or not re.fullmatch(r"[0-9]{1,28}", ra):
+            return None, jsonify({"error": "Informe apenas os números do RA (até 28 dígitos)."}), 400
+        ra = ("pg" if nivel_curso == "mestrado" else "ra") + ra
         if buscar_usuario_por_ra(ra) is not None:
             return None, jsonify({"error": "RA já cadastrado."}), 400
 
@@ -83,6 +88,10 @@ def register_user(data):
         # visível no log — antes disso era engolido em silêncio e
         # ninguém percebia que o OTP nunca chegava.
         current_app.logger.exception("Falha ao enviar OTP de verificação para %s", email)
+        return None, jsonify({
+            "error": "Sua conta foi criada, mas não foi possível enviar o código. Tente reenviar mais tarde.",
+            "verification_pending": True,
+        }), 503
 
     return user_id, None, 201
 
@@ -98,10 +107,10 @@ def login_user(data):
     try:
         email = data["email"]
         password = data["password"]
-    
+
     except KeyError as e:
         return None, jsonify({"error": f"Campo obrigatório ausente: {e}"}), 400
-    
+
     user = buscar_usuario_por_email(email)
 
 
@@ -137,7 +146,7 @@ def request_password_reset(email: str):
     user = buscar_usuario_por_email(email)
     if not user:
         return None
-    
+
     token = generate_reset_token(user.id)
 
     send_reset_email(to=user.email, token=token)
@@ -177,6 +186,8 @@ def verify_otp_service(email: str, code: str) -> tuple[bool, str]:
 
 
 def resend_verification_service(email: str) -> None:
+    if not current_app.testing and not current_app.config.get("MAIL_DEFAULT_SENDER", (None, ""))[1]:
+        raise RuntimeError("Email sender is not configured")
     user = buscar_usuario_por_email(email)
     if not user or user.email_verified:
         return
@@ -187,6 +198,7 @@ def resend_verification_service(email: str) -> None:
         send_otp_email(to=email, otp_code=otp)
     except Exception:
         current_app.logger.exception("Falha ao reenviar OTP de verificação para %s", email)
+        raise
 
 
 def reset_password(token: str, new_password: str):
@@ -199,7 +211,7 @@ def reset_password(token: str, new_password: str):
     user = buscar_usuario_por_id(user_id)
     if not user:
         return False
-    
+
     password_hash = generate_password_hash(new_password)
     atualizar_senha(user.id, password_hash)
     return True
